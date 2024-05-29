@@ -1,5 +1,6 @@
 import telebot
 import random
+import os
 
 # Вставьте ваш токен Telegram API
 TOKEN = '7477213854:AAHXaL-jNYX-co1WIusrlA-b98JcrfM4ajE'
@@ -35,10 +36,10 @@ def connect(message):
 
     # Проверка, есть ли уже пара для пользователя
     if chat_id in user_pairs:
-        bot.reply_to(message, 'Вы уже находитесь в чате.')
+        bot.reply_to(message, 'Вы уже находитесь в чате. Для остановки диалога /stop')
     else:
         user_pairs[chat_id] = None
-        bot.reply_to(message, 'Ожидайте собеседника...')
+        bot.reply_to(message, 'Ожидайте собеседника...\nПопробуйте написать сообщение может собеседник найден. \nДля остановки поиска /cancel')
 
 # Обработчик команды /cancel
 @bot.message_handler(commands=['cancel'])
@@ -46,9 +47,9 @@ def cancel(message):
     chat_id = message.chat.id
 
     if cancel_search(chat_id):
-        bot.reply_to(message, 'Поиск собеседника отменен.')
+        bot.reply_to(message, 'Поиск собеседника отменен. Для поиска /connect')
     else:
-        bot.reply_to(message, 'Вы не находитесь в поиске собеседника.')
+        bot.reply_to(message, 'Вы не находитесь в поиске.\nДля поиска /connect \n Для остановки диалога /stop')
 
 # Функция для отмены поиска собеседника
 def cancel_search(chat_id):
@@ -63,9 +64,9 @@ def cancel_search(chat_id):
 def stop(message):
     chat_id = message.chat.id
     if stop_chat(chat_id):
-        bot.reply_to(message, 'Диалог остановлен.')
+        bot.reply_to(message, 'Диалог остановлен. Для поиска /connect')
     else:
-        bot.reply_to(message, 'Вы не находитесь в активном диалоге.')
+        bot.reply_to(message, 'Вы не находитесь в активном диалоге. \nДля поиска собеседника /connect \nДля остановки поиска /cancel')
 
 # Обработчик текстовых сообщений
 @bot.message_handler(func=lambda message: True)
@@ -82,16 +83,20 @@ def chat(message):
                 if value is None and key != chat_id:
                     user_pairs[key] = chat_id
                     user_pairs[chat_id] = key
-                    bot.reply_to(message, 'Собеседник найден! Начинайте общение. Для выхода из диалога /stop')
-                    bot.send_message(key, 'Собеседник найден! Начинайте общение. Для выхода из диалога /stop')
+                    bot.reply_to(message, 'Собеседник найден! Начинайте общение. \nДля выхода из диалога /stop')
+                    bot.send_message(key, 'Собеседник найден! Начинайте общение. \nДля выхода из диалога /stop')
                     break
             if user_pairs[chat_id] is None:
                 bot.reply_to(message, 'Поиск собеседника...')
         else:
             # Отправляем сообщение пользователю-паре
             bot.send_message(pair_id, message.text)
+
+            # Сохраняем текстовые сообщения в файл
+            with open('chat_history.txt', 'a') as file:
+                file.write(f'{message.from_user.username}: {message.text}\\n')
     else:
-        bot.reply_to(message, 'Для начала чата отправьте команду /connect.')
+        bot.reply_to(message, 'Для начала чата отправьте команду \n/connect.')
 
 # Обработчик мультимедийных сообщений
 @bot.message_handler(content_types=['photo', 'audio', 'voice', 'video', 'document'])

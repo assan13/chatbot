@@ -48,6 +48,24 @@ def stop(message):
     else:
         bot.reply_to(message, 'Вы не находитесь в чате.')
 
+# Обработчик команды /cancel
+@bot.message_handler(commands=['cancel'])
+def cancel(message):
+    chat_id = message.chat.id
+
+    if cancel_search(chat_id):
+        bot.reply_to(message, 'Поиск собеседника отменен.')
+    else:
+        bot.reply_to(message, 'Вы не находитесь в поиске собеседника.')
+
+# Функция для отмены поиска собеседника
+def cancel_search(chat_id):
+    if chat_id in user_pairs:
+        if user_pairs[chat_id] is None:
+            user_pairs.pop(chat_id)
+            return True
+    return False
+
 # Обработчик текстовых сообщений
 @bot.message_handler(func=lambda message: True)
 def chat(message):
